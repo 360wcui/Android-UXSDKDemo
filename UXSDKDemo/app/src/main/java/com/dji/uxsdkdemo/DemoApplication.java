@@ -107,6 +107,7 @@ public class DemoApplication extends Application {
             @Override
             public void onProductDisconnect() {
                 Log.d("TAG", "onProductDisconnect");
+
                 notifyStatusChange();
             }
             @Override

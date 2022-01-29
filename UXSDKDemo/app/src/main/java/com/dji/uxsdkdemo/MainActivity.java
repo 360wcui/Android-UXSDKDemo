@@ -3,18 +3,27 @@ package com.dji.uxsdkdemo;
 import android.Manifest;
 import android.os.Build;
 import android.os.Bundle;
+import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 
+import dji.sdk.base.BaseProduct;
+import dji.sdk.flightcontroller.FlightController;
+import dji.sdk.products.Aircraft;
+
 public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = MainActivity.class.getName();
+    private TextView lat = null;
+    private TextView lng = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        lat  = (TextView) findViewById(R.id.lat);
+        lng  = (TextView) findViewById(R.id.lng);
         // When the compile and target version is higher than 22, please request the
         // following permissions at runtime to ensure the
         // SDK work well.
@@ -29,6 +38,26 @@ public class MainActivity extends AppCompatActivity {
                             Manifest.permission.READ_PHONE_STATE,
                     }
                     , 1);
+        }
+
+        FlightController mFlightController = null;
+        BaseProduct product = DemoApplication.getProductInstance();
+
+        if (product != null && product.isConnected()) {
+            if (product instanceof Aircraft) {
+                mFlightController = ((Aircraft) product).getFlightController();
+            }
+        }
+
+        // Getting Aircraft
+        // ================
+        if (mFlightController != null) {
+            mFlightController.setStateCallback(
+                    djiFlightControllerCurrentState -> {
+                        lat.setText("" + djiFlightControllerCurrentState.getAircraftLocation().getLatitude());
+                        lng.setText("" + djiFlightControllerCurrentState.getAircraftLocation().getLongitude());
+                    }
+            );
         }
 
         setContentView(R.layout.activity_main);
