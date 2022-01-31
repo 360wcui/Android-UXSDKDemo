@@ -15,7 +15,6 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 
 import dji.common.flightcontroller.FlightControllerState;
-import dji.sdk.base.BaseProduct;
 import dji.sdk.flightcontroller.FlightController;
 import dji.sdk.products.Aircraft;
 import dji.sdk.sdkmanager.DJISDKManager;
@@ -27,41 +26,8 @@ public class MainActivity extends AppCompatActivity {
     private TextView lng;
     private long count = 0;
 
-    private double droneLocationLat = 181, droneLocationLng = 181;
+    private double droneLocationLat = 181, droneLocationLng = 181, orientation=-100;
     private FlightController mFlightController;
-
-
-    private void initFlightController() {
-
-        BaseProduct product = DemoApplication.getProductInstance();
-        if (product != null && product.isConnected()) {
-            if (product instanceof Aircraft) {
-                setResultToToast("instance of aircraft");
-                mFlightController = ((Aircraft) product).getFlightController();
-            }
-        }
-
-        if (mFlightController != null) {
-            mFlightController.setStateCallback(new FlightControllerState.Callback() {
-
-                @Override
-                public void onUpdate(FlightControllerState djiFlightControllerCurrentState) {
-                    setResultToToast("get called2");
-                    droneLocationLat = djiFlightControllerCurrentState.getAircraftLocation().getLatitude();
-                    droneLocationLng = djiFlightControllerCurrentState.getAircraftLocation().getLongitude();
-                    lat.setText("" + droneLocationLat);
-                    lng.setText("" + droneLocationLng);
-//                    updateDroneLocation();
-                    showToast(droneLocationLat + "," + droneLocationLng);
-                }
-            });
-        } else {
-            lat.setText("haha");
-            lng.setText("haha2");
-            showToast("sdafasf");
-
-        }
-    }
 
     private boolean isFlightControllerSupported() {
         return DJISDKManager.getInstance().getProduct() != null &&
@@ -69,7 +35,7 @@ public class MainActivity extends AppCompatActivity {
                 ((Aircraft) DJISDKManager.getInstance().getProduct()).getFlightController() != null;
     }
 
-    private void initFlightController2() {
+    private void initFlightController() {
 
         if (isFlightControllerSupported()) {
             mFlightController = ((Aircraft) DJISDKManager.getInstance().getProduct()).getFlightController();
@@ -79,13 +45,16 @@ public class MainActivity extends AppCompatActivity {
                                              djiFlightControllerCurrentState) {
                     droneLocationLat = djiFlightControllerCurrentState.getAircraftLocation().getLatitude();
                     droneLocationLng = djiFlightControllerCurrentState.getAircraftLocation().getLongitude();
-                    showToast(droneLocationLat + " * " + droneLocationLat);
+                    orientation = djiFlightControllerCurrentState.getAircraftLocation().getLatitude();
+                    showToast(toastMessage());
                 }
             });
-        } else {
-            showToast(  "NA * NA");
-
         }
+    }
+
+    private String toastMessage() {
+        double scale = Math.pow(10, 6);
+        return "" + Math.round(droneLocationLat * scale) / scale + "*" + Math.round(droneLocationLng * scale) / scale + "*" + orientation;
     }
 
 
@@ -113,11 +82,6 @@ public class MainActivity extends AppCompatActivity {
 
         setContentView(R.layout.activity_main);
 
-//        IntentFilter filter = new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION);
-//        IntentFilter filter = new IntentFilter();
-//        filter.addAction(DemoApplication.FLAG_CONNECTION_CHANGE);
-//        registerReceiver(mReceiver, filter);
-
     }
 
     @Override
@@ -130,7 +94,6 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onStop() {
-
         super.onStop();
         unregisterReceiver(mReceiver);
     }
@@ -139,27 +102,11 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public void onReceive(Context context, Intent intent) {
-//            count++;
-//            if (count % 1000 == 500) {
-//                setResultToToast("get called");
-//                lat.setText("" + count);
-//            }
-//            lat.setText("" + count);
-//            lng.setText("" + droneLocationLng);
-//            onProductConnectionChange();
-            initFlightController2();
+            initFlightController();
 
         }
     };
 
-    private void setResultToToast(final String string) {
-        MainActivity.this.runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                Toast.makeText(MainActivity.this, string, Toast.LENGTH_SHORT).show();
-            }
-        });
-    }
 
     private void showToast(final String toastMsg) {
         runOnUiThread(new Runnable() {
